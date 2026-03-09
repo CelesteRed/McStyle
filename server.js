@@ -33,15 +33,53 @@ function broadcast(data) {
   }
 }
 
-// Online user tracking
-wss.on('connection', (ws) => {
-  // Send current count to the newly connected client
-  ws.send(JSON.stringify({ type: 'online_count', count: wss.clients.size }));
-  // Broadcast updated count to all clients
-  broadcast({ type: 'online_count', count: wss.clients.size });
+// Online user tracking — only count Discord-authenticated users
+const onlineUsers = new Map(); // ws -> { discordId, username, avatar }
+
+function getAuthenticatedCount() {
+  return onlineUsers.size;
+}
+
+function broadcastOnlineCount() {
+  broadcast({ type: 'online_count', count: getAuthenticatedCount() });
+}
+
+wss.on('connection', (ws, req) => {
+  // Parse cookie from upgrade request to identify user
+  const cookies = req.headers.cookie || '';
+  const match = cookies.match(/mcstyle_token=([^;]+)/);
+  const token = match ? match[1] : null;
+  const session = token ? sessions.get(token) : null;
+
+  if (session) {
+    onlineUsers.set(ws, {
+      discordId: session.discordId,
+      username: session.username,
+      avatar: session.avatar,
+    });
+  }
+
+  // Send current count to newly connected client
+  ws.send(JSON.stringify({ type: 'online_count', count: getAuthenticatedCount() }));
+  broadcastOnlineCount();
+
+  // Allow client to authenticate after connecting (e.g. if they log in later)
+  ws.on('message', (msg) => {
+    try {
+      const data = JSON.parse(msg);
+      if (data.type === 'auth' && data.token) {
+        const s = sessions.get(data.token);
+        if (s && !onlineUsers.has(ws)) {
+          onlineUsers.set(ws, { discordId: s.discordId, username: s.username, avatar: s.avatar });
+          broadcastOnlineCount();
+        }
+      }
+    } catch { /* ignore */ }
+  });
 
   ws.on('close', () => {
-    broadcast({ type: 'online_count', count: wss.clients.size });
+    onlineUsers.delete(ws);
+    broadcastOnlineCount();
   });
 });
 
@@ -159,7 +197,7 @@ function saveUsers(users) {
   writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
-const ALLOWED_EMOJIS = ['🔥', '❤️', '👍', '👎', '😂', '🎨'];
+const ALLOWED_EMOJIS = ['🔥', '❤️', '😂', '🎨'];
 
 // Convert raw reactions (with discordId arrays) to public counts
 function getPublicReactions(reactions, sessionDiscordId) {
@@ -326,7 +364,7 @@ app.post('/api/auth/callback', async (req, res) => {
 app.get('/api/auth/me', (req, res) => {
   const session = getSession(req);
   if (!session) return res.status(401).json(null);
-  const isAdmin = ADMIN_DISCORD_ID && session.discordId === ADMIN_DISCORD_ID;
+  const isAdmin = !!(ADMIN_DISCORD_ID && session.discordId === ADMIN_DISCORD_ID);
   res.json({ ...session, isAdmin });
 });
 
@@ -468,6 +506,48 @@ app.post('/api/admin/unban', requireAdmin, (req, res) => {
   bannedIPs = bannedIPs.filter(i => i !== ip);
   saveBannedIPs(bannedIPs);
   res.json({ success: true, bannedIPs });
+});
+
+// Admin: list online users
+app.get('/api/admin/online', requireAdmin, (req, res) => {
+  const users = [];
+  const seen = new Set();
+  for (const [, user] of onlineUsers) {
+    if (!seen.has(user.discordId)) {
+      seen.add(user.discordId);
+      users.push({ discordId: user.discordId, username: user.username, avatar: user.avatar });
+    }
+  }
+  res.json(users);
+});
+
+// Admin: list all registered users with storage info
+app.get('/api/admin/users', requireAdmin, (req, res) => {
+  const users = loadUsers();
+  const result = Object.entries(users).map(([discordId, data]) => {
+    const tabCount = data.tabs ? data.tabs.length : 0;
+    const dataSize = JSON.stringify(data).length;
+    return {
+      discordId,
+      theme: data.theme || 'default',
+      tabCount,
+      dataSize,
+      updatedAt: data.updatedAt || null,
+    };
+  });
+  // Enrich with online status and username from active sessions
+  const onlineIds = new Set([...onlineUsers.values()].map(u => u.discordId));
+  const sessionMap = new Map();
+  for (const s of sessions.values()) {
+    sessionMap.set(s.discordId, s);
+  }
+  for (const u of result) {
+    const session = sessionMap.get(u.discordId);
+    u.username = session ? session.username : u.discordId;
+    u.avatar = session ? session.avatar : null;
+    u.online = onlineIds.has(u.discordId);
+  }
+  res.json(result);
 });
 
 // --- User Data Routes ---

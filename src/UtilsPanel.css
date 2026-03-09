@@ -2,8 +2,8 @@
 .utils-sidebar {
   display: flex;
   flex-direction: column;
-  background: #111827;
-  border-left: 1px solid #333;
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
   height: 100vh;
   position: sticky;
   top: 0;
@@ -22,9 +22,9 @@
 
 /* Reuse sidebar-toggle style */
 .utils-sidebar .sidebar-toggle {
-  background: #1a1a2e;
+  background: var(--bg-input);
   border: none;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--border);
   color: var(--text-dim);
   font-size: 14px;
   font-weight: 700;
@@ -38,7 +38,7 @@
 }
 
 .utils-sidebar .sidebar-toggle:hover {
-  background: #222;
+  background: var(--bg-mc);
   color: var(--text);
 }
 
@@ -48,14 +48,14 @@
   align-items: center;
   justify-content: center;
   padding: 14px 14px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .utils-header h2 {
   font-family: 'Minecraft', monospace;
   font-size: 15px;
-  color: #5588ff;
+  color: var(--accent);
   text-shadow: 1px 1px 0 #000;
   font-weight: normal;
 }
@@ -72,14 +72,14 @@
 
 /* Collapsible section */
 .util-section {
-  border: 1px solid #2a2a3e;
+  border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
   transition: border-color 0.15s;
 }
 
 .util-section:hover:not(.disabled) {
-  border-color: #444;
+  border-color: var(--text-dim);
 }
 
 .util-section.disabled {
@@ -92,7 +92,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: #1a1a2e;
+  background: var(--bg-input);
   border: none;
   color: var(--text);
   font-size: 13px;
@@ -106,11 +106,11 @@
 }
 
 .util-section-header:hover {
-  background: #1e1e35;
+  background: var(--bg-mc);
 }
 
 .util-section.disabled .util-section-header:hover {
-  background: #1a1a2e;
+  background: var(--bg-input);
 }
 
 .util-section-title {
@@ -129,16 +129,16 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #666;
-  background: #222;
+  color: var(--text-dim);
+  background: var(--bg-mc);
   padding: 2px 8px;
   border-radius: 3px;
 }
 
 .util-section-body {
   padding: 12px 14px;
-  border-top: 1px solid #2a2a3e;
-  background: #141420;
+  border-top: 1px solid var(--border);
+  background: var(--bg-dark);
 }
 
 /* Shared utility content */
@@ -151,8 +151,8 @@
 .util-input {
   width: 100%;
   padding: 8px 10px;
-  background: #1a1a2e;
-  border: 1px solid #333;
+  background: var(--bg-mc);
+  border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text);
   font-size: 13px;
@@ -161,18 +161,18 @@
 }
 
 .util-input:focus {
-  border-color: #5588ff;
+  border-color: var(--accent);
 }
 
 .util-input::placeholder {
-  color: #555;
+  color: var(--text-dim);
 }
 
 .util-result {
-  background: #1a1a2e;
+  background: var(--bg-mc);
   border-radius: 4px;
   padding: 6px 10px;
-  border: 1px solid #2a2a3e;
+  border: 1px solid var(--border);
 }
 
 .util-result-label {
@@ -201,7 +201,7 @@
 .util-copy-btn {
   padding: 2px 8px;
   background: transparent;
-  border: 1px solid #333;
+  border: 1px solid var(--border);
   border-radius: 4px;
   color: var(--text-dim);
   font-size: 11px;
@@ -212,8 +212,8 @@
 }
 
 .util-copy-btn:hover {
-  border-color: #5588ff;
-  color: #5588ff;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Color key grid */
@@ -233,8 +233,8 @@
   align-items: center;
   gap: 6px;
   padding: 5px 8px;
-  background: #1a1a2e;
-  border: 1px solid #2a2a3e;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s;
@@ -242,7 +242,7 @@
 }
 
 .color-key-item:hover {
-  border-color: #444;
+  border-color: var(--text-dim);
 }
 
 .color-key-item.copied {
@@ -253,7 +253,7 @@
   width: 14px;
   height: 14px;
   border-radius: 2px;
-  border: 1px solid #555;
+  border: 1px solid var(--text-dim);
   flex-shrink: 0;
 }
 
@@ -284,8 +284,8 @@
   align-items: center;
   gap: 10px;
   padding: 5px 8px;
-  background: #1a1a2e;
-  border: 1px solid #2a2a3e;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s;
@@ -293,7 +293,7 @@
 }
 
 .color-key-fmt:hover {
-  border-color: #444;
+  border-color: var(--text-dim);
 }
 
 .color-key-fmt.copied {
@@ -310,10 +310,10 @@
 }
 
 .utils-list::-webkit-scrollbar-thumb {
-  background: #333;
+  background: var(--border);
   border-radius: 3px;
 }
 
 .utils-list::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--text-dim);
 }

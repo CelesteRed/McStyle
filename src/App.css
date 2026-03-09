@@ -56,15 +56,63 @@
 }
 
 [data-theme="light"] {
-  --bg-dark: #e8e8ee;
-  --bg-card: #f5f5fa;
-  --bg-input: #dcdce6;
+  --bg-dark: #eeeef3;
+  --bg-card: #f7f7fb;
+  --bg-input: #e2e2eb;
   --bg-mc: #ffffff;
-  --accent: #2a8a2a;
-  --accent-dim: #55aa55;
+  --accent: #555;
+  --accent-dim: #888;
   --text: #1a1a2e;
-  --text-dim: #666;
-  --border: #c0c0cc;
+  --text-dim: #777;
+  --border: #d0d0da;
+}
+
+[data-theme="cherry"] {
+  --bg-dark: #1f0f14;
+  --bg-card: #2a1520;
+  --bg-input: #3a1f2e;
+  --bg-mc: #180a10;
+  --accent: #ff6b8a;
+  --accent-dim: #b34460;
+  --text: #f5e0e8;
+  --text-dim: #a07888;
+  --border: #4a2838;
+}
+
+[data-theme="cyberpunk"] {
+  --bg-dark: #0c0015;
+  --bg-card: #140022;
+  --bg-input: #1e0033;
+  --bg-mc: #08000e;
+  --accent: #e040fb;
+  --accent-dim: #9c27b0;
+  --text: #f0e0ff;
+  --text-dim: #8866aa;
+  --border: #3a1555;
+}
+
+[data-theme="tron"] {
+  --bg-dark: #0a0e14;
+  --bg-card: #0f1820;
+  --bg-input: #14222e;
+  --bg-mc: #060a0f;
+  --accent: #00e5ff;
+  --accent-dim: #0097a7;
+  --text: #e0f7fa;
+  --text-dim: #5c8a90;
+  --border: #1a3a44;
+}
+
+[data-theme="discord"] {
+  --bg-dark: #313338;
+  --bg-card: #2b2d31;
+  --bg-input: #383a40;
+  --bg-mc: #1e1f22;
+  --accent: #5865f2;
+  --accent-dim: #4752c4;
+  --text: #f2f3f5;
+  --text-dim: #949ba4;
+  --border: #3f4147;
 }
 
 * {
@@ -304,6 +352,19 @@ body {
 .menubar-username {
   font-size: 12px;
   color: var(--text);
+}
+
+.menubar-separator-v {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  margin: 0 2px;
+}
+
+.menubar-version {
+  font-size: 11px;
+  color: var(--text-dim);
+  opacity: 0.5;
 }
 
 /* Light theme menu bar overrides */

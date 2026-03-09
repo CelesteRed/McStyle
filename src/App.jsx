@@ -124,7 +124,11 @@ const THEMES = [
   { id: 'midnight', label: 'Midnight', colors: ['#0d0d1a', '#7b8cff', '#2a2a44'] },
   { id: 'nord', label: 'Nord', colors: ['#2e3440', '#88c0d0', '#4c566a'] },
   { id: 'monokai', label: 'Monokai', colors: ['#272822', '#a6e22e', '#49483e'] },
-  { id: 'light', label: 'Light', colors: ['#e8e8ee', '#2a8a2a', '#c0c0cc'] },
+  { id: 'cherry', label: 'Cherry Blossom', colors: ['#1f0f14', '#ff6b8a', '#4a2838'] },
+  { id: 'cyberpunk', label: 'Cyberpunk', colors: ['#0c0015', '#e040fb', '#3a1555'] },
+  { id: 'tron', label: 'Tron', colors: ['#0a0e14', '#00e5ff', '#1a3a44'] },
+  { id: 'discord', label: 'Discord', colors: ['#313338', '#5865f2', '#3f4147'] },
+  { id: 'light', label: 'Light', colors: ['#eeeef3', '#555555', '#d0d0da'] },
 ];
 
 function App() {
@@ -142,6 +146,7 @@ function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('mcstyle_theme') || 'default');
   const [openMenu, setOpenMenu] = useState(null);
   const [onlineCount, setOnlineCount] = useState(0);
+  const [showAdmin, setShowAdmin] = useState(false);
   const textareaRef = useRef(null);
   const snifferCooldown = useRef(false);
   const clickTimeout = useRef(null);
@@ -617,6 +622,14 @@ function App() {
             </div>
           )}
         </div>
+        {discordUser && discordUser.isAdmin && (
+          <div className="menubar-item" onClick={() => { setShowAdmin(prev => !prev); setOpenMenu(null); }}>
+            Admin
+          </div>
+        )}
+        <div className="menubar-separator-v" />
+        <div className="menubar-item" onClick={() => { importFile(); setOpenMenu(null); }}>Import</div>
+        <div className="menubar-item" onClick={() => { exportTab(); setOpenMenu(null); }}>Export</div>
       </div>
       <div className="menubar-right">
         <div className="menubar-online">
@@ -633,6 +646,7 @@ function App() {
             <span className="menubar-username">{discordUser.username}</span>
           </div>
         )}
+        <span className="menubar-version">v1.0.0</span>
       </div>
     </div>
 
@@ -1026,7 +1040,7 @@ function App() {
 
     </div>
     <UtilsPanel open={utilsOpen} onToggle={setUtilsOpen} />
-    <AdminPanel />
+    <AdminPanel show={showAdmin} onClose={() => setShowAdmin(false)} />
     </div>
     </>
   );

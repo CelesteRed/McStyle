@@ -72,7 +72,7 @@ function saveHistory(items) {
   localStorage.setItem('mcstyle_history', JSON.stringify(items));
 }
 
-const AVAILABLE_EMOJIS = ['\uD83D\uDD25', '\u2764\uFE0F', '\uD83D\uDC4D', '\uD83D\uDC4E', '\uD83D\uDE02', '\uD83C\uDFA8'];
+const AVAILABLE_EMOJIS = ['\uD83D\uDD25', '\u2764\uFE0F', '\uD83D\uDE02', '\uD83C\uDFA8'];
 
 export default function CommunityPanel({ currentFormatString, open, onToggle, onModify, discordUser, authLoading }) {
   const openRef = useRef(open);
