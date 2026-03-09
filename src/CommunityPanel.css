@@ -213,6 +213,105 @@
   padding: 20px 0;
 }
 
+/* Discord login gate */
+.community-login-gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 12px;
+  flex: 1;
+}
+
+.login-gate-icon {
+  opacity: 0.8;
+}
+
+.login-gate-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.login-gate-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.discord-login-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: #5865F2;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 8px;
+}
+
+.discord-login-btn:hover {
+  background: #4752C4;
+}
+
+.community-tab.locked {
+  opacity: 0.7;
+}
+
+/* User bar */
+.community-user-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #2a2a3e;
+  flex-shrink: 0;
+}
+
+.community-user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.community-user-name {
+  font-size: 13px;
+  color: var(--text);
+  flex: 1;
+}
+
+.community-logout-btn {
+  padding: 3px 10px;
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.community-logout-btn:hover {
+  border-color: #ff5555;
+  color: #ff5555;
+}
+
+/* Discord name on cards */
+.community-card-discord {
+  font-size: 10px;
+  color: #5865F2;
+  background: rgba(88, 101, 242, 0.1);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
 /* Card */
 .community-card {
   background: #1a1a2e;

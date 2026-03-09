@@ -3,6 +3,7 @@ import { parseMCText, MC_COLORS, MC_COLOR_NAMES } from './mcParser';
 import ColorPicker from './ColorPicker';
 import CommunityPanel from './CommunityPanel';
 import UtilsPanel from './UtilsPanel';
+import AdminPanel from './AdminPanel';
 import './App.css';
 
 const OBFUSCATED_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
@@ -131,6 +132,40 @@ function App() {
   const [utilsOpen, setUtilsOpen] = useState(true);
   const [copied, setCopied] = useState(false);
   const textareaRef = useRef(null);
+
+  // Discord auth state
+  const [discordUser, setDiscordUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if user is logged in
+    fetch('/api/auth/me').then(res => {
+      if (res.ok) return res.json();
+      return null;
+    }).then(user => {
+      setDiscordUser(user);
+      setAuthLoading(false);
+    }).catch(() => setAuthLoading(false));
+  }, []);
+
+  // Handle OAuth callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      fetch('/api/auth/callback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      }).then(res => res.json()).then(data => {
+        if (data.user) {
+          setDiscordUser(data.user);
+        }
+      }).catch(() => {});
+      // Clean URL
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
 
   const tab = tabs.find(t => t.id === activeTabId) || tabs[0];
 
@@ -352,6 +387,8 @@ function App() {
       open={communityOpen}
       onToggle={setCommunityOpen}
       onModify={handleModify}
+      discordUser={discordUser}
+      authLoading={authLoading}
     />
     <div className="app">
       <header className="header">
@@ -720,6 +757,7 @@ function App() {
 
     </div>
     <UtilsPanel open={utilsOpen} onToggle={setUtilsOpen} />
+    <AdminPanel />
     </div>
   );
 }

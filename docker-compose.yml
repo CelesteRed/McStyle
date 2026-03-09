@@ -8,6 +8,12 @@ services:
       - "5859:5858"
     volumes:
       - mcstyle-data:/app/data
+    environment:
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-changeme}
+      - ADMIN_DISCORD_ID=${ADMIN_DISCORD_ID:-}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID:-}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET:-}
+      - DISCORD_REDIRECT_URI=${DISCORD_REDIRECT_URI:-https://mcstyle.notceleste.xyz}
     restart: unless-stopped
 
   web:
