@@ -1,29 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './UtilsPanel.css';
 
 // ===== TINY TEXT DATA =====
 const SMALL_CAPS = {
-  'a': 'ᴀ', 'b': 'ʙ', 'c': 'ᴄ', 'd': 'ᴅ', 'e': 'ᴇ', 'f': 'ꜰ',
-  'g': 'ɢ', 'h': 'ʜ', 'i': 'ɪ', 'j': 'ᴊ', 'k': 'ᴋ', 'l': 'ʟ',
-  'm': 'ᴍ', 'n': 'ɴ', 'o': 'ᴏ', 'p': 'ᴘ', 'q': 'ǫ', 'r': 'ʀ',
-  's': 's', 't': 'ᴛ', 'u': 'ᴜ', 'v': 'ᴠ', 'w': 'ᴡ', 'x': 'x',
-  'y': 'ʏ', 'z': 'ᴢ',
+  'a': '\u1D00', 'b': '\u0299', 'c': '\u1D04', 'd': '\u1D05', 'e': '\u1D07', 'f': '\uA730',
+  'g': '\u0262', 'h': '\u029C', 'i': '\u026A', 'j': '\u1D0A', 'k': '\u1D0B', 'l': '\u029F',
+  'm': '\u1D0D', 'n': '\u0274', 'o': '\u1D0F', 'p': '\u1D18', 'q': '\u01EB', 'r': '\u0280',
+  's': 's', 't': '\u1D1B', 'u': '\u1D1C', 'v': '\u1D20', 'w': '\u1D21', 'x': 'x',
+  'y': '\u028F', 'z': '\u1D22',
 };
 const SUPERSCRIPT = {
-  'a': 'ᵃ', 'b': 'ᵇ', 'c': 'ᶜ', 'd': 'ᵈ', 'e': 'ᵉ', 'f': 'ᶠ',
-  'g': 'ᵍ', 'h': 'ʰ', 'i': 'ⁱ', 'j': 'ʲ', 'k': 'ᵏ', 'l': 'ˡ',
-  'm': 'ᵐ', 'n': 'ⁿ', 'o': 'ᵒ', 'p': 'ᵖ', 'q': 'q', 'r': 'ʳ',
-  's': 'ˢ', 't': 'ᵗ', 'u': 'ᵘ', 'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ',
-  'y': 'ʸ', 'z': 'ᶻ',
-  '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
-  '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+  'a': '\u1D43', 'b': '\u1D47', 'c': '\u1D9C', 'd': '\u1D48', 'e': '\u1D49', 'f': '\u1DA0',
+  'g': '\u1D4D', 'h': '\u02B0', 'i': '\u2071', 'j': '\u02B2', 'k': '\u1D4F', 'l': '\u02E1',
+  'm': '\u1D50', 'n': '\u207F', 'o': '\u1D52', 'p': '\u1D56', 'q': 'q', 'r': '\u02B3',
+  's': '\u02E2', 't': '\u1D57', 'u': '\u1D58', 'v': '\u1D5B', 'w': '\u02B7', 'x': '\u02E3',
+  'y': '\u02B8', 'z': '\u1DBB',
+  '0': '\u2070', '1': '\u00B9', '2': '\u00B2', '3': '\u00B3', '4': '\u2074',
+  '5': '\u2075', '6': '\u2076', '7': '\u2077', '8': '\u2078', '9': '\u2079',
 };
 const SUBSCRIPT = {
-  'a': 'ₐ', 'e': 'ₑ', 'h': 'ₕ', 'i': 'ᵢ', 'j': 'ⱼ', 'k': 'ₖ',
-  'l': 'ₗ', 'm': 'ₘ', 'n': 'ₙ', 'o': 'ₒ', 'p': 'ₚ', 'r': 'ᵣ',
-  's': 'ₛ', 't': 'ₜ', 'u': 'ᵤ', 'v': 'ᵥ', 'x': 'ₓ',
-  '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
-  '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
+  'a': '\u2090', 'e': '\u2091', 'h': '\u2095', 'i': '\u1D62', 'j': '\u2C7C', 'k': '\u2096',
+  'l': '\u2097', 'm': '\u2098', 'n': '\u2099', 'o': '\u2092', 'p': '\u209A', 'r': '\u1D63',
+  's': '\u209B', 't': '\u209C', 'u': '\u1D64', 'v': '\u1D65', 'x': '\u2093',
+  '0': '\u2080', '1': '\u2081', '2': '\u2082', '3': '\u2083', '4': '\u2084',
+  '5': '\u2085', '6': '\u2086', '7': '\u2087', '8': '\u2088', '9': '\u2089',
 };
 const FULLWIDTH = {};
 for (let i = 33; i <= 126; i++) {
@@ -77,7 +77,6 @@ const COMING_SOON = [
   'Book Formatter',
 ];
 
-// Load saved state from localStorage
 function loadUtilsState() {
   try {
     return JSON.parse(localStorage.getItem('mcstyle_utils') || '{}');
@@ -106,7 +105,7 @@ function UtilSection({ id, title, disabled, savedState, onStateChange, children 
         {disabled ? (
           <span className="util-coming-soon">Coming Soon</span>
         ) : (
-          <span className="util-chevron">{expanded ? '−' : '+'}</span>
+          <span className="util-chevron">{expanded ? '\u2212' : '+'}</span>
         )}
       </button>
       {expanded && !disabled && (
@@ -266,15 +265,8 @@ function ColorKeyUtil() {
 }
 
 // ===== MAIN PANEL =====
-export default function UtilsPanel({ onToggle }) {
-  const [open, setOpen] = useState(false);
+export default function UtilsPanel({ open, onToggle }) {
   const [utilsState, setUtilsState] = useState(loadUtilsState);
-
-  const toggle = (val) => {
-    const next = typeof val === 'boolean' ? val : !open;
-    setOpen(next);
-    if (onToggle) onToggle(next);
-  };
 
   const updateSection = (id, data) => {
     setUtilsState(prev => {
@@ -285,78 +277,65 @@ export default function UtilsPanel({ onToggle }) {
   };
 
   return (
-    <>
-      {/* Floating button - bottom right */}
-      <button
-        className={`utils-bubble ${open ? 'hide' : ''}`}
-        onClick={() => toggle(true)}
-        title="Utilities"
-      >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-        </svg>
-      </button>
+    <div className={`utils-sidebar ${open ? 'open' : 'collapsed'}`}>
+      {open && (
+        <>
+          <div className="utils-header">
+            <h2>Utilities</h2>
+          </div>
 
-      {/* Overlay */}
-      {open && <div className="utils-overlay" onClick={() => toggle(false)} />}
-
-      {/* Panel */}
-      <div className={`utils-panel ${open ? 'open' : ''}`}>
-        <div className="utils-header">
-          <h2>Utilities</h2>
-          <button className="utils-close" onClick={() => toggle(false)}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="utils-list">
-          <UtilSection
-            id="colorkey"
-            title="Minecraft Color Key"
-            savedState={utilsState.colorkey}
-            onStateChange={updateSection}
-          >
-            <ColorKeyUtil />
-          </UtilSection>
-
-          <UtilSection
-            id="tinytext"
-            title="Tiny Text Generator"
-            savedState={utilsState.tinytext}
-            onStateChange={updateSection}
-          >
-            <TinyTextUtil
-              savedState={utilsState.tinytext}
-              onStateChange={(data) => updateSection('tinytext', { ...data, expanded: true })}
-            />
-          </UtilSection>
-
-          <UtilSection
-            id="textgen"
-            title="Text Generators"
-            savedState={utilsState.textgen}
-            onStateChange={updateSection}
-          >
-            <TextGenUtil
-              savedState={utilsState.textgen}
-              onStateChange={(data) => updateSection('textgen', { ...data, expanded: true })}
-            />
-          </UtilSection>
-
-          {COMING_SOON.map((name) => (
+          <div className="utils-list">
             <UtilSection
-              key={name}
-              id={name}
-              title={name}
-              disabled
-              savedState={{}}
-              onStateChange={() => {}}
-            />
-          ))}
-        </div>
-      </div>
-    </>
+              id="colorkey"
+              title="Minecraft Color Key"
+              savedState={utilsState.colorkey}
+              onStateChange={updateSection}
+            >
+              <ColorKeyUtil />
+            </UtilSection>
+
+            <UtilSection
+              id="tinytext"
+              title="Tiny Text Generator"
+              savedState={utilsState.tinytext}
+              onStateChange={updateSection}
+            >
+              <TinyTextUtil
+                savedState={utilsState.tinytext}
+                onStateChange={(data) => updateSection('tinytext', { ...data, expanded: true })}
+              />
+            </UtilSection>
+
+            <UtilSection
+              id="textgen"
+              title="Text Generators"
+              savedState={utilsState.textgen}
+              onStateChange={updateSection}
+            >
+              <TextGenUtil
+                savedState={utilsState.textgen}
+                onStateChange={(data) => updateSection('textgen', { ...data, expanded: true })}
+              />
+            </UtilSection>
+
+            {COMING_SOON.map((name) => (
+              <UtilSection
+                key={name}
+                id={name}
+                title={name}
+                disabled
+                savedState={{}}
+                onStateChange={() => {}}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Collapse/expand toggle at bottom */}
+      <button className="sidebar-toggle" onClick={() => onToggle(!open)}>
+        {open ? '>>' : '<<'}
+      </button>
+    </div>
   );
 }

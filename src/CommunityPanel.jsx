@@ -72,10 +72,9 @@ function saveHistory(items) {
   localStorage.setItem('mcstyle_history', JSON.stringify(items));
 }
 
-export default function CommunityPanel({ currentFormatString, onToggle, onModify }) {
-  const [open, setOpen] = useState(false);
-  const openRef = useRef(false);
-  const [tab, setTab] = useState('history'); // 'history' or 'community'
+export default function CommunityPanel({ currentFormatString, open, onToggle, onModify }) {
+  const openRef = useRef(open);
+  const [tab, setTab] = useState('history');
 
   // Community state
   const [styles, setStyles] = useState([]);
@@ -91,12 +90,9 @@ export default function CommunityPanel({ currentFormatString, onToggle, onModify
   const [history, setHistory] = useState(loadHistory);
   const [historyLabel, setHistoryLabel] = useState('');
 
-  const toggle = (val) => {
-    const next = typeof val === 'boolean' ? val : !open;
-    setOpen(next);
-    openRef.current = next;
-    if (onToggle) onToggle(next);
-  };
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
 
   // Fetch community styles when switching to community tab
   const fetchStyles = useCallback(async () => {
@@ -153,7 +149,7 @@ export default function CommunityPanel({ currentFormatString, onToggle, onModify
       label: historyLabel.trim() || 'Untitled',
       date: new Date().toLocaleDateString(),
     };
-    const updated = [entry, ...history].slice(0, 50); // keep max 50
+    const updated = [entry, ...history].slice(0, 50);
     setHistory(updated);
     saveHistory(updated);
     setHistoryLabel('');
@@ -207,183 +203,169 @@ export default function CommunityPanel({ currentFormatString, onToggle, onModify
   };
 
   return (
-    <>
-      {/* Floating toggle button */}
-      <button
-        className={`community-bubble ${open ? 'hide' : ''}`}
-        onClick={() => toggle(true)}
-        title="Community Styles"
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-      </button>
-
-      {/* Click-away overlay */}
-      {open && <div className="community-overlay" onClick={() => toggle(false)} />}
-
-      {/* Slide-out panel */}
-      <div className={`community-panel ${open ? 'open' : ''}`}>
-        <div className="community-header">
-          <div className="community-tabs">
-            <button
-              className={`community-tab ${tab === 'history' ? 'active' : ''}`}
-              onClick={() => setTab('history')}
-            >
-              History
-            </button>
-            <button
-              className={`community-tab ${tab === 'community' ? 'active' : ''}`}
-              onClick={() => setTab('community')}
-            >
-              Community
-            </button>
+    <div className={`community-sidebar ${open ? 'open' : 'collapsed'}`}>
+      {open && (
+        <>
+          <div className="community-header">
+            <div className="community-tabs">
+              <button
+                className={`community-tab ${tab === 'history' ? 'active' : ''}`}
+                onClick={() => setTab('history')}
+              >
+                History
+              </button>
+              <button
+                className={`community-tab ${tab === 'community' ? 'active' : ''}`}
+                onClick={() => setTab('community')}
+              >
+                Community
+              </button>
+            </div>
           </div>
-          <button className="community-close" onClick={() => toggle(false)}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
 
-        {/* ===== HISTORY TAB ===== */}
-        {tab === 'history' && (
-          <>
-            <div className="share-form">
-              <div className="share-form-title">Save Current Style</div>
-              <input
-                type="text"
-                placeholder="Label (e.g. Owner, Admin...)"
-                value={historyLabel}
-                onChange={(e) => setHistoryLabel(e.target.value)}
-                className="share-input"
-                maxLength={40}
-              />
-              <div className="share-preview-row">
-                <span className="share-preview-label">Style:</span>
-                <div className="share-preview-mc">
-                  <MiniMCPreview text={currentFormatString + 'Steve'} />
+          <div className="community-body">
+            {/* ===== HISTORY TAB ===== */}
+            {tab === 'history' && (
+              <>
+                <div className="share-form">
+                  <div className="share-form-title">Save Current Style</div>
+                  <input
+                    type="text"
+                    placeholder="Label (e.g. Owner, Admin...)"
+                    value={historyLabel}
+                    onChange={(e) => setHistoryLabel(e.target.value)}
+                    className="share-input"
+                    maxLength={40}
+                  />
+                  <div className="share-preview-row">
+                    <span className="share-preview-label">Style:</span>
+                    <div className="share-preview-mc">
+                      <MiniMCPreview text={currentFormatString + 'Steve'} />
+                    </div>
+                  </div>
+                  <button className="share-btn" onClick={saveToHistory}>
+                    Save to History
+                  </button>
                 </div>
-              </div>
-              <button className="share-btn" onClick={saveToHistory}>
-                Save to History
-              </button>
-            </div>
 
-            <div className="community-divider" />
+                <div className="community-divider" />
 
-            <div className="community-list">
-              {history.length === 0 && (
-                <div className="community-empty">No saved styles yet. Save one above!</div>
-              )}
-              {history.map((item) => (
-                <div key={item.id} className="community-card">
-                  <div className="community-card-preview">
-                    <MiniMCPreview text={item.formatString + 'Steve'} />
-                  </div>
-                  <div className="community-card-info">
-                    <span className="community-card-label">{item.label}</span>
-                    <span className="community-card-date">{item.date}</span>
-                  </div>
-                  <div className="community-card-actions">
-                    <button
-                      className="community-card-copy"
-                      onClick={() => copyStyle(item.formatString, item.id)}
-                    >
-                      {copiedId === item.id ? 'Copied!' : 'Copy'}
-                    </button>
-                    <button
-                      className="community-card-modify"
-                      onClick={() => onModify && onModify(item.formatString, item.label)}
-                    >
-                      Modify
-                    </button>
-                    <button
-                      className="community-card-delete"
-                      onClick={() => removeFromHistory(item.id)}
-                    >
-                      Remove
-                    </button>
-                  </div>
+                <div className="community-list">
+                  {history.length === 0 && (
+                    <div className="community-empty">No saved styles yet. Save one above!</div>
+                  )}
+                  {history.map((item) => (
+                    <div key={item.id} className="community-card">
+                      <div className="community-card-preview">
+                        <MiniMCPreview text={item.formatString + 'Steve'} />
+                      </div>
+                      <div className="community-card-info">
+                        <span className="community-card-label">{item.label}</span>
+                        <span className="community-card-date">{item.date}</span>
+                      </div>
+                      <div className="community-card-actions">
+                        <button
+                          className="community-card-copy"
+                          onClick={() => copyStyle(item.formatString, item.id)}
+                        >
+                          {copiedId === item.id ? 'Copied!' : 'Copy'}
+                        </button>
+                        <button
+                          className="community-card-modify"
+                          onClick={() => onModify && onModify(item.formatString, item.label)}
+                        >
+                          Modify
+                        </button>
+                        <button
+                          className="community-card-delete"
+                          onClick={() => removeFromHistory(item.id)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </>
-        )}
+              </>
+            )}
 
-        {/* ===== COMMUNITY TAB ===== */}
-        {tab === 'community' && (
-          <>
-            <form className="share-form" onSubmit={handleSubmit}>
-              <div className="share-form-title">Share Your Style</div>
-              <input
-                type="text"
-                placeholder="MC Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="share-input"
-                maxLength={24}
-              />
-              <input
-                type="text"
-                placeholder="Label (e.g. Owner, Admin...)"
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                className="share-input"
-                maxLength={40}
-              />
-              <div className="share-preview-row">
-                <span className="share-preview-label">Sharing:</span>
-                <div className="share-preview-mc">
-                  <MiniMCPreview text={currentFormatString + (username || 'Steve')} />
+            {/* ===== COMMUNITY TAB ===== */}
+            {tab === 'community' && (
+              <>
+                <form className="share-form" onSubmit={handleSubmit}>
+                  <div className="share-form-title">Share Your Style</div>
+                  <input
+                    type="text"
+                    placeholder="MC Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="share-input"
+                    maxLength={24}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Label (e.g. Owner, Admin...)"
+                    value={label}
+                    onChange={(e) => setLabel(e.target.value)}
+                    className="share-input"
+                    maxLength={40}
+                  />
+                  <div className="share-preview-row">
+                    <span className="share-preview-label">Sharing:</span>
+                    <div className="share-preview-mc">
+                      <MiniMCPreview text={currentFormatString + (username || 'Steve')} />
+                    </div>
+                  </div>
+                  <button type="submit" className="share-btn" disabled={submitting}>
+                    {submitting ? 'Sharing...' : 'Share Style'}
+                  </button>
+                  {error && <div className="share-error">{error}</div>}
+                  {success && <div className="share-success">{success}</div>}
+                </form>
+
+                <div className="community-divider" />
+
+                <div className="community-list">
+                  {loading && <div className="community-loading">Loading...</div>}
+                  {!loading && styles.length === 0 && (
+                    <div className="community-empty">No styles shared yet. Be the first!</div>
+                  )}
+                  {styles.map((style) => (
+                    <div key={style.id} className="community-card">
+                      <div className="community-card-preview">
+                        <MiniMCPreview text={style.formatString + style.username} />
+                      </div>
+                      <div className="community-card-info">
+                        <span className="community-card-user">{style.username}</span>
+                        {style.label && <span className="community-card-label">{style.label}</span>}
+                      </div>
+                      <div className="community-card-actions">
+                        <button
+                          className="community-card-copy"
+                          onClick={() => copyStyle(style.formatString, style.id)}
+                        >
+                          {copiedId === style.id ? 'Copied!' : 'Copy'}
+                        </button>
+                        <button
+                          className="community-card-modify"
+                          onClick={() => onModify && onModify(style.formatString, style.label || style.username)}
+                        >
+                          Modify
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-              <button type="submit" className="share-btn" disabled={submitting}>
-                {submitting ? 'Sharing...' : 'Share Style'}
-              </button>
-              {error && <div className="share-error">{error}</div>}
-              {success && <div className="share-success">{success}</div>}
-            </form>
+              </>
+            )}
+          </div>
+        </>
+      )}
 
-            <div className="community-divider" />
-
-            <div className="community-list">
-              {loading && <div className="community-loading">Loading...</div>}
-              {!loading && styles.length === 0 && (
-                <div className="community-empty">No styles shared yet. Be the first!</div>
-              )}
-              {styles.map((style) => (
-                <div key={style.id} className="community-card">
-                  <div className="community-card-preview">
-                    <MiniMCPreview text={style.formatString + style.username} />
-                  </div>
-                  <div className="community-card-info">
-                    <span className="community-card-user">{style.username}</span>
-                    {style.label && <span className="community-card-label">{style.label}</span>}
-                  </div>
-                  <div className="community-card-actions">
-                    <button
-                      className="community-card-copy"
-                      onClick={() => copyStyle(style.formatString, style.id)}
-                    >
-                      {copiedId === style.id ? 'Copied!' : 'Copy'}
-                    </button>
-                    <button
-                      className="community-card-modify"
-                      onClick={() => onModify && onModify(style.formatString, style.label || style.username)}
-                    >
-                      Modify
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    </>
+      {/* Collapse/expand toggle at bottom */}
+      <button className="sidebar-toggle" onClick={() => onToggle(!open)}>
+        {open ? '<<' : '>>'}
+      </button>
+    </div>
   );
 }

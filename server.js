@@ -32,13 +32,70 @@ setInterval(() => {
   }
 }, 30000);
 
-// Profanity filter
+// Profanity filter - strict with bypass detection
 const filter = new Filter();
 filter.addWords(
   'nazi', 'hitler', 'heil', 'swastika', 'kkk', 'whitepow',
   'whitepower', 'n1gger', 'n1gga', 'f4ggot', 'f4g',
   'tr4nny', 'ch1nk', 'sp1c', 'k1ke', 'wetb4ck'
 );
+
+// Leet/unicode substitution map - normalize text before checking
+const LEET_MAP = {
+  '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '8': 'b',
+  '@': 'a', '$': 's', '!': 'i', '+': 't', '(': 'c', '|': 'l',
+  '\u00e0': 'a', '\u00e1': 'a', '\u00e2': 'a', '\u00e3': 'a', '\u00e4': 'a',
+  '\u00e8': 'e', '\u00e9': 'e', '\u00ea': 'e', '\u00eb': 'e',
+  '\u00ec': 'i', '\u00ed': 'i', '\u00ee': 'i', '\u00ef': 'i',
+  '\u00f2': 'o', '\u00f3': 'o', '\u00f4': 'o', '\u00f5': 'o', '\u00f6': 'o',
+  '\u00f9': 'u', '\u00fa': 'u', '\u00fb': 'u', '\u00fc': 'u',
+  '\u00ff': 'y', '\u00f1': 'n', '\u00e7': 'c',
+  // Small caps and other unicode tricks
+  '\u1D00': 'a', '\u0299': 'b', '\u1D04': 'c', '\u1D05': 'd', '\u1D07': 'e',
+  '\uA730': 'f', '\u0262': 'g', '\u029C': 'h', '\u026A': 'i', '\u1D0A': 'j',
+  '\u1D0B': 'k', '\u029F': 'l', '\u1D0D': 'm', '\u0274': 'n', '\u1D0F': 'o',
+  '\u1D18': 'p', '\u01EB': 'q', '\u0280': 'r', '\u1D1B': 't', '\u1D1C': 'u',
+  '\u1D20': 'v', '\u1D21': 'w', '\u028F': 'y', '\u1D22': 'z',
+};
+
+// Hardcoded slur patterns (normalized form) - catches the root regardless of bypass
+const SLUR_PATTERNS = [
+  'nigger', 'nigga', 'nigg', 'n1gg',
+  'faggot', 'fagot', 'fagg',
+  'tranny', 'trannie',
+  'chink', 'gook', 'spic', 'spick', 'wetback',
+  'kike', 'kyke',
+  'coon', 'darkie', 'darky',
+  'beaner', 'gringo',
+  'towelhead', 'raghead', 'sandnigger',
+  'retard', 'retrd',
+  'whitepower', 'whitepow', 'heilhitler',
+  'nazi', 'hitler', 'heil', 'swastika',
+  'kkk',
+];
+
+function normalizeText(text) {
+  // Lowercase
+  let normalized = text.toLowerCase();
+  // Strip MC format codes
+  normalized = normalized.replace(/<#[0-9a-f]{6}>|<\/#[0-9a-f]{6}>|&[0-9a-fk-or]/gi, '');
+  // Apply leet/unicode substitutions
+  normalized = normalized.split('').map(ch => LEET_MAP[ch] || ch).join('');
+  // Strip all non-alphanumeric (spaces, dots, dashes, underscores, special chars)
+  normalized = normalized.replace(/[^a-z]/g, '');
+  return normalized;
+}
+
+function isStrictProfane(text) {
+  // Check with bad-words library first (original text)
+  if (filter.isProfane(text)) return true;
+  // Normalize and check against slur patterns
+  const normalized = normalizeText(text);
+  for (const pattern of SLUR_PATTERNS) {
+    if (normalized.includes(pattern)) return true;
+  }
+  return false;
+}
 
 // Data file path (persisted in Docker volume)
 const DATA_DIR = process.env.DATA_DIR || join(__dirname, 'data');
@@ -112,12 +169,7 @@ app.post('/api/styles', (req, res) => {
   const cleanLabel = (label || '').trim().slice(0, 40);
   const cleanFormat = formatString.trim().slice(0, 200);
 
-  if (filter.isProfane(cleanUsername) || filter.isProfane(cleanLabel)) {
-    return res.status(400).json({ error: 'Inappropriate content detected.' });
-  }
-
-  const visibleText = cleanFormat.replace(/<#[0-9A-Fa-f]{6}>|<\/#[0-9A-Fa-f]{6}>|&[0-9a-fk-or]/gi, '');
-  if (filter.isProfane(visibleText)) {
+  if (isStrictProfane(cleanUsername) || isStrictProfane(cleanLabel) || isStrictProfane(cleanFormat)) {
     return res.status(400).json({ error: 'Inappropriate content detected.' });
   }
 

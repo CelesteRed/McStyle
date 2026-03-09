@@ -71,11 +71,13 @@ let tabCounter = 1;
 const DEFAULT_RAW = '<#FFFFFF>[Rank]</#FFFFFF> &f';
 
 function createTab(name, rawText) {
+  const text = rawText || DEFAULT_RAW;
   return {
     id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
     name: name || `Tab ${tabCounter++}`,
     mode: 'raw',
-    rawText: rawText || DEFAULT_RAW,
+    rawText: text,
+    originalRawText: text,
     prefix: '[Rank]',
     useGradient: false,
     gradientStart: '#67FB00',
@@ -90,22 +92,63 @@ function createTab(name, rawText) {
   };
 }
 
+function isTabDirty(t) {
+  return !t.saved && t.rawText !== (t.originalRawText ?? DEFAULT_RAW);
+}
+
+function loadSavedTabs() {
+  try {
+    const data = JSON.parse(localStorage.getItem('mcstyle_tabs'));
+    if (data && data.tabs && data.tabs.length > 0) {
+      // Restore tabCounter so new tabs don't collide names
+      const maxNum = data.tabs.reduce((max, t) => {
+        const m = t.name.match(/^Tab (\d+)$/);
+        return m ? Math.max(max, parseInt(m[1])) : max;
+      }, 0);
+      tabCounter = maxNum + 1;
+      return data;
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+function saveTabs(tabs, activeTabId) {
+  localStorage.setItem('mcstyle_tabs', JSON.stringify({ tabs, activeTabId }));
+}
+
 const PREVIEW_NAME = 'Steve';
 
 function App() {
-  const [tabs, setTabs] = useState(() => [createTab()]);
-  const [activeTabId, setActiveTabId] = useState(() => tabs[0]?.id);
-  const [communityOpen, setCommunityOpen] = useState(false);
-  const [utilsOpen, setUtilsOpen] = useState(false);
+  const [tabs, setTabs] = useState(() => {
+    const saved = loadSavedTabs();
+    return saved ? saved.tabs : [createTab()];
+  });
+  const [activeTabId, setActiveTabId] = useState(() => {
+    const saved = loadSavedTabs();
+    return saved ? saved.activeTabId : tabs[0]?.id;
+  });
+  const [communityOpen, setCommunityOpen] = useState(true);
+  const [utilsOpen, setUtilsOpen] = useState(true);
   const [copied, setCopied] = useState(false);
   const textareaRef = useRef(null);
 
   const tab = tabs.find(t => t.id === activeTabId) || tabs[0];
 
+  // Auto-save tabs to localStorage on every change
+  useEffect(() => {
+    saveTabs(tabs, activeTabId);
+  }, [tabs, activeTabId]);
+
   const updateTab = useCallback((updates) => {
-    setTabs(prev => prev.map(t =>
-      t.id === activeTabId ? { ...t, ...updates } : t
-    ));
+    setTabs(prev => prev.map(t => {
+      if (t.id !== activeTabId) return t;
+      const updated = { ...t, ...updates };
+      // If content changed after being saved, mark unsaved again
+      if (updates.rawText !== undefined && t.saved) {
+        updated.saved = false;
+      }
+      return updated;
+    }));
   }, [activeTabId]);
 
   const addTab = (name, rawText) => {
@@ -119,8 +162,7 @@ function App() {
   const closeTab = (id) => {
     if (tabs.length <= 1) return;
     const t = tabs.find(t => t.id === id);
-    // If tab has been modified from default and not saved, prompt
-    if (t && !t.saved && t.rawText !== DEFAULT_RAW) {
+    if (t && isTabDirty(t)) {
       setShowSavePrompt(id);
       return;
     }
@@ -146,17 +188,31 @@ function App() {
   const saveAndClose = () => {
     const t = tabs.find(t => t.id === showSavePrompt);
     if (t) {
-      const fs = t.mode === 'raw' ? t.rawText : currentFormatString;
+      const fs = t.rawText.trim();
       const history = JSON.parse(localStorage.getItem('mcstyle_history') || '[]');
       const entry = {
         id: Date.now().toString(),
-        formatString: fs.trim(),
+        formatString: fs,
         label: t.name,
         date: new Date().toLocaleDateString(),
       };
       localStorage.setItem('mcstyle_history', JSON.stringify([entry, ...history].slice(0, 50)));
     }
     doCloseTab(showSavePrompt);
+  };
+
+  // Save current tab without closing (clears dirty state)
+  const saveCurrentTab = () => {
+    const fs = tab.rawText.trim();
+    const history = JSON.parse(localStorage.getItem('mcstyle_history') || '[]');
+    const entry = {
+      id: Date.now().toString(),
+      formatString: fs,
+      label: tab.name,
+      date: new Date().toLocaleDateString(),
+    };
+    localStorage.setItem('mcstyle_history', JSON.stringify([entry, ...history].slice(0, 50)));
+    updateTab({ saved: true });
   };
 
   // Derived values from current tab
@@ -223,9 +279,81 @@ function App() {
     }, 0);
   };
 
+  // Export current tab as .mcstyle file
+  const exportTab = () => {
+    const { id, saved, ...tabData } = tab;
+    const mcstyle = {
+      version: 1,
+      type: 'mcstyle',
+      tabs: [tabData],
+    };
+    const blob = new Blob([JSON.stringify(mcstyle, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${tab.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.mcstyle`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Export all tabs
+  const exportAllTabs = () => {
+    const mcstyle = {
+      version: 1,
+      type: 'mcstyle',
+      tabs: tabs.map(({ id, saved, ...rest }) => rest),
+    };
+    const blob = new Blob([JSON.stringify(mcstyle, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'mcstyle_project.mcstyle';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Import .mcstyle file
+  const importFile = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.mcstyle';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (data.type !== 'mcstyle' || !data.tabs || !data.tabs.length) {
+            alert('Invalid .mcstyle file.');
+            return;
+          }
+          const newTabs = data.tabs.map(t => ({
+            ...createTab(t.name, t.rawText),
+            ...t,
+            id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+            saved: false,
+          }));
+          setTabs(prev => [...prev, ...newTabs]);
+          setActiveTabId(newTabs[0].id);
+        } catch {
+          alert('Failed to parse .mcstyle file.');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
   return (
-    <>
-    <div className={`app ${communityOpen ? 'community-open' : ''} ${utilsOpen ? 'utils-open' : ''}`}>
+    <div className="layout-root">
+    <CommunityPanel
+      currentFormatString={currentFormatString}
+      open={communityOpen}
+      onToggle={setCommunityOpen}
+      onModify={handleModify}
+    />
+    <div className="app">
       <header className="header">
         <h1>Minecraft Username Styler</h1>
         <p className="subtitle">LuckPerms &amp; TAB Prefix Editor</p>
@@ -239,7 +367,7 @@ function App() {
             className={`project-tab ${t.id === activeTabId ? 'active' : ''}`}
             onClick={() => setActiveTabId(t.id)}
           >
-            <span className="project-tab-name">{t.name}</span>
+            <span className="project-tab-name">{t.name}{isTabDirty(t) ? ' *' : ''}</span>
             {tabs.length > 1 && (
               <button
                 className="project-tab-close"
@@ -251,6 +379,16 @@ function App() {
           </div>
         ))}
         <button className="project-tab-add" onClick={() => addTab()}>+</button>
+        <div className="project-tab-spacer" />
+        <button className="project-tab-action" onClick={importFile} title="Import .mcstyle file">
+          Import
+        </button>
+        <button className="project-tab-action" onClick={exportTab} title="Export current tab">
+          Export
+        </button>
+        <button className="project-tab-action" onClick={exportAllTabs} title="Export all tabs">
+          Export All
+        </button>
       </div>
 
       <div className="page-layout">
@@ -577,18 +715,12 @@ function App() {
       )}
 
       <footer className="footer">
-        <p>Minecraft Username Styler — For LuckPerms + TAB</p>
+        <p>McStyle - 2026 - by <a href="https://github.com/CelesteRed" target="_blank" rel="noopener noreferrer">Celeste</a> &lt;3</p>
       </footer>
 
     </div>
-
-    <CommunityPanel
-      currentFormatString={currentFormatString}
-      onToggle={setCommunityOpen}
-      onModify={handleModify}
-    />
-    <UtilsPanel onToggle={setUtilsOpen} />
-  </>
+    <UtilsPanel open={utilsOpen} onToggle={setUtilsOpen} />
+    </div>
   );
 }
 
