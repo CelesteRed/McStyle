@@ -132,6 +132,35 @@ function App() {
   const [utilsOpen, setUtilsOpen] = useState(true);
   const [copied, setCopied] = useState(false);
   const textareaRef = useRef(null);
+  const snifferCooldown = useRef(false);
+  const clickTimeout = useRef(null);
+
+  const playSnifferSound = () => {
+    if (snifferCooldown.current) return;
+    snifferCooldown.current = true;
+    const n = Math.floor(Math.random() * 3) + 1;
+    const audio = new Audio(`/sounds/scenting${n}.ogg`);
+    audio.volume = 0.5;
+    audio.play().catch(() => {});
+    setTimeout(() => { snifferCooldown.current = false; }, 1000);
+  };
+
+  const handleLogoClick = () => {
+    if (clickTimeout.current) return; // waiting for double-click check
+    clickTimeout.current = setTimeout(() => {
+      clickTimeout.current = null;
+      playSnifferSound();
+    }, 250);
+  };
+
+  const handleLogoDoubleClick = () => {
+    if (clickTimeout.current) {
+      clearTimeout(clickTimeout.current);
+      clickTimeout.current = null;
+    }
+    playSnifferSound();
+    window.open('https://github.com/CelesteRed', '_blank');
+  };
 
   // Discord auth state
   const [discordUser, setDiscordUser] = useState(null);
@@ -429,7 +458,14 @@ function App() {
     />
     <div className="app">
       <header className="header">
-        <h1>Minecraft Username Styler</h1>
+        <img
+          src="/mcstyle-logo.png"
+          alt="MCStyle"
+          className="header-logo"
+          onClick={handleLogoClick}
+          onDoubleClick={handleLogoDoubleClick}
+          draggable={false}
+        />
         <p className="subtitle">LuckPerms &amp; TAB Prefix Editor</p>
       </header>
 

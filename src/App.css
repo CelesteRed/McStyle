@@ -75,13 +75,20 @@ body {
   padding: 30px 0 20px;
 }
 
-.header h1 {
-  font-family: 'Minecraft', monospace;
-  font-size: 28px;
-  color: var(--accent);
-  text-shadow: 2px 2px 0 #000;
-  letter-spacing: 1px;
-  font-weight: normal;
+.header-logo {
+  width: min(75%, 500px);
+  cursor: pointer;
+  user-select: none;
+  image-rendering: pixelated;
+  transition: transform 0.1s;
+}
+
+.header-logo:hover {
+  transform: scale(1.05);
+}
+
+.header-logo:active {
+  transform: scale(0.97);
 }
 
 /* Project Tabs */
