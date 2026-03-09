@@ -622,21 +622,21 @@ function App() {
             </div>
           )}
         </div>
-        {discordUser && discordUser.isAdmin && (
-          <div className="menubar-item" onClick={() => { setShowAdmin(prev => !prev); setOpenMenu(null); }}>
-            Admin
-          </div>
-        )}
         <div className="menubar-separator-v" />
         <div className="menubar-item" onClick={() => { importFile(); setOpenMenu(null); }}>Import</div>
         <div className="menubar-item" onClick={() => { exportTab(); setOpenMenu(null); }}>Export</div>
       </div>
       <div className="menubar-right">
+        {discordUser && discordUser.isAdmin && (
+          <div className="menubar-item admin-menubar-item" onClick={() => { setShowAdmin(prev => !prev); setOpenMenu(null); }}>
+            Admin
+          </div>
+        )}
         <div className="menubar-online">
           <span className="menubar-online-dot" />
           {onlineCount} online
         </div>
-        {discordUser && (
+        {discordUser ? (
           <div className="menubar-user">
             <img
               src={discordUser.avatar}
@@ -645,6 +645,18 @@ function App() {
             />
             <span className="menubar-username">{discordUser.username}</span>
           </div>
+        ) : !authLoading && (
+          <button className="menubar-login-btn" onClick={async () => {
+            try {
+              const res = await fetch('/api/auth/discord-url');
+              const data = await res.json();
+              if (data.url) window.location.href = data.url;
+            } catch { /* */ }
+          }}>
+            <span className="menubar-avatar-placeholder">?</span>
+            <img src="https://img.icons8.com/ios/50/discord-logo--v1.png" alt="" width="14" height="14" style={{ filter: 'invert(1)' }} />
+            Login
+          </button>
         )}
         <span className="menubar-version">v1.0.0</span>
       </div>

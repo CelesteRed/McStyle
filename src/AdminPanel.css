@@ -256,6 +256,29 @@
   color: #555;
 }
 
+.admin-user-discord-tag {
+  font-size: 10px;
+  color: #5865F2;
+  background: rgba(88, 101, 242, 0.1);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.admin-user-banned-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: #ff5555;
+  background: rgba(255, 85, 85, 0.15);
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.admin-user-card.banned {
+  border-color: rgba(255, 85, 85, 0.3);
+  opacity: 0.7;
+}
+
 /* Style cards */
 .admin-style-list {
   display: flex;

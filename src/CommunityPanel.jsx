@@ -77,6 +77,10 @@ const AVAILABLE_EMOJIS = ['\uD83D\uDD25', '\u2764\uFE0F', '\uD83D\uDE02', '\uD83
 export default function CommunityPanel({ currentFormatString, open, onToggle, onModify, discordUser, authLoading }) {
   const openRef = useRef(open);
   const [tab, setTab] = useState('history');
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [clearConfirmText, setClearConfirmText] = useState('');
+  const userMenuRef = useRef(null);
 
   // Community state
   const [styles, setStyles] = useState([]);
@@ -99,6 +103,20 @@ export default function CommunityPanel({ currentFormatString, open, onToggle, on
   useEffect(() => {
     openRef.current = open;
   }, [open]);
+
+  // Close user menu on outside click
+  useEffect(() => {
+    if (!showUserMenu) return;
+    const handler = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setShowUserMenu(false);
+        setShowClearConfirm(false);
+        setClearConfirmText('');
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showUserMenu]);
 
   // Fetch community styles when switching to community tab
   const fetchStyles = useCallback(async () => {
@@ -385,12 +403,70 @@ export default function CommunityPanel({ currentFormatString, open, onToggle, on
             {tab === 'community' && discordUser && (
               <>
                 <div className="community-user-bar">
-                  {discordUser.avatar && <img className="community-user-avatar" src={discordUser.avatar} alt="" />}
+                  <div className="community-user-menu-wrap" ref={userMenuRef}>
+                    <button
+                      className="community-avatar-btn"
+                      onClick={() => { setShowUserMenu(v => !v); setShowClearConfirm(false); setClearConfirmText(''); }}
+                      title="Account options"
+                    >
+                      {discordUser.avatar
+                        ? <img className="community-user-avatar" src={discordUser.avatar} alt="" />
+                        : <span className="community-user-avatar-fallback">{(discordUser.globalName || '?')[0]}</span>
+                      }
+                    </button>
+                    {showUserMenu && (
+                      <div className="community-user-dropdown">
+                        {!showClearConfirm ? (
+                          <>
+                            <button className="user-dropdown-item danger" onClick={() => setShowClearConfirm(true)}>
+                              Clear Data
+                            </button>
+                            <button className="user-dropdown-item" onClick={async () => {
+                              await fetch('/api/auth/logout', { method: 'POST' });
+                              window.location.reload();
+                            }}>
+                              Logout
+                            </button>
+                          </>
+                        ) : (
+                          <div className="user-dropdown-confirm">
+                            <p className="user-dropdown-warn">This will delete ALL your shared styles and data. This cannot be undone.</p>
+                            <p className="user-dropdown-warn-sub">Type <strong>confirm</strong> to proceed:</p>
+                            <input
+                              type="text"
+                              className="share-input"
+                              placeholder="Type confirm..."
+                              value={clearConfirmText}
+                              onChange={(e) => setClearConfirmText(e.target.value)}
+                              autoFocus
+                            />
+                            <div className="user-dropdown-confirm-actions">
+                              <button
+                                className="user-dropdown-item"
+                                onClick={() => { setShowClearConfirm(false); setClearConfirmText(''); }}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                className="user-dropdown-item danger"
+                                disabled={clearConfirmText !== 'confirm'}
+                                onClick={async () => {
+                                  await fetch('/api/auth/clear-data', { method: 'POST' });
+                                  setShowUserMenu(false);
+                                  setShowClearConfirm(false);
+                                  setClearConfirmText('');
+                                  fetchStyles();
+                                }}
+                              >
+                                Delete Everything
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <span className="community-user-name">{discordUser.globalName}</span>
-                  <button className="community-logout-btn" onClick={async () => {
-                    await fetch('/api/auth/logout', { method: 'POST' });
-                    window.location.reload();
-                  }}>Logout</button>
                 </div>
 
                 <form className="share-form" onSubmit={handleSubmit}>

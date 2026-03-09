@@ -179,6 +179,27 @@ export default function AdminPanel({ show, onClose }) {
     for (const s of toDelete) await deleteStyle(s.id);
   };
 
+  const banDiscord = async (discordId) => {
+    try {
+      await fetch('/api/admin/ban-discord', { method: 'POST', headers, body: JSON.stringify({ discordId }) });
+      fetchAllUsers();
+    } catch { /* */ }
+  };
+
+  const unbanDiscord = async (discordId) => {
+    try {
+      await fetch('/api/admin/unban-discord', { method: 'POST', headers, body: JSON.stringify({ discordId }) });
+      fetchAllUsers();
+    } catch { /* */ }
+  };
+
+  const purgeDiscord = async (discordId) => {
+    try {
+      await fetch('/api/admin/purge-discord', { method: 'POST', headers, body: JSON.stringify({ discordId }) });
+      fetchAdminStyles();
+    } catch { /* */ }
+  };
+
   if (!show) return null;
 
   return (
@@ -242,17 +263,31 @@ export default function AdminPanel({ show, onClose }) {
               <div className="admin-section-label">All Users ({allUsers.length})</div>
               <div className="admin-users-list">
                 {allUsers.map(u => (
-                  <div key={u.discordId} className="admin-user-card">
+                  <div key={u.discordId} className={`admin-user-card ${u.banned ? 'banned' : ''}`}>
                     <div className="admin-user-top">
                       {u.avatar && <img src={u.avatar} alt="" className="admin-online-avatar" />}
                       <span className="admin-online-username">{u.username}</span>
+                      {u.discordTag && <span className="admin-user-discord-tag">@{u.discordTag}</span>}
+                      {u.banned && <span className="admin-user-banned-badge">BANNED</span>}
                       {u.online && <span className="admin-online-dot-green" />}
                     </div>
                     <div className="admin-user-stats">
                       <span>{u.tabCount} tabs</span>
                       <span>{formatBytes(u.dataSize)}</span>
                       <span className="admin-user-theme">{u.theme}</span>
+                      {u.lastIp && <span className="admin-style-ip">{u.lastIp}</span>}
                       {u.updatedAt && <span className="admin-user-date">{new Date(u.updatedAt).toLocaleDateString()}</span>}
+                    </div>
+                    <div className="admin-style-actions">
+                      {u.banned ? (
+                        <button className="admin-action-btn unban" onClick={() => unbanDiscord(u.discordId)}>Unban</button>
+                      ) : (
+                        <button className="admin-action-btn ban" onClick={() => banDiscord(u.discordId)}>Ban</button>
+                      )}
+                      <button className="admin-action-btn purge" onClick={() => purgeDiscord(u.discordId)}>Purge Styles</button>
+                      {u.lastIp && !u.banned && (
+                        <button className="admin-action-btn ban" onClick={() => banIP(u.lastIp)}>Ban IP</button>
+                      )}
                     </div>
                   </div>
                 ))}

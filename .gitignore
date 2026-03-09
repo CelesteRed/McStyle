@@ -41,3 +41,6 @@ docker-compose.override.yml
 
 # Local config
 *.local
+
+# Claude
+.claude/
