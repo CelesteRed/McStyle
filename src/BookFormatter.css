@@ -1,0 +1,351 @@
+/* ===== BOOK FORMATTER ===== */
+
+.book-formatter {
+  gap: 10px;
+}
+
+/* Meta row */
+.book-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.book-author-input {
+  font-size: 12px;
+}
+
+/* ── Page Tabs ── */
+.book-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.book-tabs-scroll {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+}
+
+.book-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--bg-mc);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.12s;
+  line-height: 1;
+  font-family: inherit;
+}
+
+.book-tab:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
+.book-tab.active {
+  background: var(--bg-input);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.book-tab-x {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1;
+  padding: 0 1px;
+  transition: color 0.12s;
+}
+
+.book-tab-x:hover {
+  color: #ff5555;
+}
+
+.book-tab-add {
+  font-size: 16px;
+  padding: 2px 8px;
+  color: var(--text-dim);
+}
+
+.book-tab-add:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Page reorder arrows */
+.book-page-arrows {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.book-arrow-btn {
+  padding: 3px 6px;
+  background: var(--bg-mc);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-dim);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.book-arrow-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.book-arrow-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* ── Editor ── */
+.book-editor-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.book-textarea {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  padding: 10px 12px;
+  background: var(--bg-mc);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  outline: none;
+  line-height: 1.55;
+  transition: border-color 0.15s;
+}
+
+.book-textarea:focus {
+  border-color: var(--accent);
+}
+
+.book-textarea::placeholder {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.book-textarea.over-limit {
+  border-color: #ff5555;
+}
+
+.book-editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 0 0 6px 6px;
+}
+
+.book-hint {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.book-charcount {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: monospace;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.book-charcount.over {
+  color: #ff5555;
+  font-weight: 700;
+}
+
+/* ── Preview ── */
+.book-preview-outer {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 2px;
+}
+
+/* Minecraft book frame */
+.book-frame {
+  width: 210px;
+  background: #4a2e1a;
+  border-radius: 3px;
+  padding: 3px;
+  box-shadow:
+    0 0 0 1px #2a1808,
+    0 4px 12px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 200, 100, 0.1);
+  image-rendering: pixelated;
+}
+
+.book-page {
+  background: #f4ead3;
+  border-radius: 2px;
+  padding: 14px 12px 10px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  /* Lined paper effect */
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 19px,
+      rgba(0, 0, 0, 0.06) 19px,
+      rgba(0, 0, 0, 0.06) 20px
+    );
+  background-position: 0 28px;
+}
+
+/* Title on first page */
+.book-preview-title {
+  font-family: 'Minecraft', monospace;
+  font-size: 9px;
+  color: #1a0a00;
+  text-align: center;
+  margin-bottom: 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  word-break: break-word;
+  line-height: 1.4;
+  text-shadow: 0.5px 0.5px 0 rgba(0,0,0,0.15);
+}
+
+.book-preview-body {
+  flex: 1;
+  overflow: hidden;
+}
+
+.book-preview-line {
+  font-family: 'Minecraft', monospace;
+  font-size: 8px;
+  line-height: 20px;
+  color: #1a0a00;
+  word-break: break-all;
+  white-space: pre-wrap;
+  min-height: 20px;
+}
+
+.book-preview-empty {
+  font-family: 'Minecraft', monospace;
+  font-size: 8px;
+  color: rgba(26, 10, 0, 0.3);
+  font-style: italic;
+  line-height: 20px;
+}
+
+.book-preview-pgnum {
+  font-family: 'Minecraft', monospace;
+  font-size: 7px;
+  color: rgba(26, 10, 0, 0.4);
+  text-align: center;
+  margin-top: 8px;
+  letter-spacing: 1px;
+}
+
+/* Obfuscated text animation */
+.mc-obf {
+  animation: mc-obfuscate 0.1s steps(1) infinite;
+}
+
+@keyframes mc-obfuscate {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+/* ── Export ── */
+.book-export-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.book-export-toggles {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.book-fmt-btn {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--bg-mc);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: inherit;
+}
+
+.book-fmt-btn:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
+.book-fmt-btn.active {
+  background: var(--bg-input);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.book-copy-btn {
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+.book-export-preview {
+  background: var(--bg-mc);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.book-export-code {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  word-break: break-all;
+  white-space: pre-wrap;
+  display: block;
+  line-height: 1.5;
+}
+
+.book-export-preview::-webkit-scrollbar {
+  width: 4px;
+}
+
+.book-export-preview::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.book-export-preview::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
