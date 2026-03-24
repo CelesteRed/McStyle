@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import './UtilsPanel.css';
+import BookFormatterUtil from './BookFormatter';
 
 // ===== TINY TEXT DATA =====
 const SMALL_CAPS = {
@@ -74,7 +75,6 @@ const COMING_SOON = [
   'Scoreboard Formatter',
   'Hologram Text',
   'Sign Editor',
-  'Book Formatter',
 ];
 
 function loadUtilsState() {
@@ -286,6 +286,7 @@ const ALL_SECTIONS = [
   { id: 'colorkey', title: 'Minecraft Color Key' },
   { id: 'tinytext', title: 'Tiny Text Generator' },
   { id: 'textgen', title: 'Text Generators' },
+  { id: 'bookformatter', title: 'Book Formatter' },
   ...COMING_SOON.map(name => ({ id: name, title: name, disabled: true })),
 ];
 
@@ -303,6 +304,12 @@ function renderSectionContent(id, utilsState, updateSection) {
     <TextGenUtil
       savedState={utilsState.textgen}
       onStateChange={(data) => updateSection('textgen', { ...data, expanded: true })}
+    />
+  );
+  if (id === 'bookformatter') return (
+    <BookFormatterUtil
+      savedState={utilsState.bookformatter}
+      onStateChange={(data) => updateSection('bookformatter', data)}
     />
   );
   return null;
