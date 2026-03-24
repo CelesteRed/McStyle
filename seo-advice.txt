@@ -1,0 +1,129 @@
+MCStyle SEO Advice & What Was Done
+====================================
+Generated: March 2026
+
+WHAT WAS IMPLEMENTED
+--------------------
+
+1. TITLE TAG OPTIMIZATION
+   - Changed from "MCStyle - Minecraft Username Styler" to include MOTD & Styled Chat
+   - These are high-search-volume keywords people actually Google
+
+2. META DESCRIPTION
+   - Added a keyword-rich description mentioning: colored usernames, MOTD messages,
+     styled chat, gradients, formatting codes, LuckPerms, TAB plugin, Styled Chat
+   - This is what shows up as the snippet in Google search results
+
+3. META KEYWORDS
+   - Added relevant keywords: "minecraft motd generator", "minecraft styled chat",
+     "minecraft color codes", "minecraft gradient text", "luckperms prefix generator",
+     "minecraft tab plugin", etc.
+   - While Google doesn't weight this tag much anymore, other search engines do
+
+4. CANONICAL URL
+   - Added <link rel="canonical"> to prevent duplicate content issues
+   - Tells Google "this is the official URL for this page"
+
+5. ROBOTS META TAG
+   - Added "index, follow" to explicitly tell crawlers to index the page
+
+6. ROBOTS.TXT
+   - Created public/robots.txt to guide search engine crawlers
+   - Blocks /api/ and /ws (no reason to index those)
+   - Points to the sitemap
+
+7. SITEMAP.XML
+   - Created public/sitemap.xml for search engines to discover pages
+   - Submit this to Google Search Console for faster indexing
+
+8. OPEN GRAPH IMPROVEMENTS
+   - Added og:site_name
+   - Made og:image use absolute URL (required by many crawlers)
+   - Updated title and description to match SEO keywords
+
+9. TWITTER CARD TAGS
+   - Added twitter:card, twitter:title, twitter:description, twitter:image
+   - When someone shares your site on Twitter/X, it shows a nice preview
+
+10. STRUCTURED DATA (JSON-LD)
+    - Added Schema.org WebApplication markup
+    - This helps Google understand your site is a web tool/app
+    - Can lead to rich snippets in search results (showing it's free, what category, etc.)
+
+11. WEB MANIFEST UPDATE
+    - Added proper name, description, and theme colors
+    - Helps with PWA recognition and app store discovery
+
+
+ADDITIONAL SEO STEPS YOU SHOULD DO MANUALLY
+--------------------------------------------
+
+1. GOOGLE SEARCH CONSOLE (most important next step!)
+   - Go to https://search.google.com/search-console
+   - Add your site: mcstyle.notceleste.xyz
+   - Verify ownership (DNS TXT record or HTML file method)
+   - Submit your sitemap: https://mcstyle.notceleste.xyz/sitemap.xml
+   - This is how you tell Google your site exists and get indexing data
+
+2. BING WEBMASTER TOOLS
+   - Go to https://www.bing.com/webmasters
+   - Same process as Google Search Console
+   - Covers Bing, Yahoo, and DuckDuckGo
+
+3. BACKLINKS
+   - Post your tool on Minecraft forums (SpigotMC, PaperMC, MC-Market)
+   - Share on r/admincraft, r/minecraft subreddits
+   - Add to Minecraft tool lists / wikis
+   - Post on Planet Minecraft
+   - These backlinks from relevant sites are the #1 factor for ranking
+
+4. SPIGOT/PAPER RESOURCE PAGE
+   - If you have a SpigotMC account, create a resource page for MCStyle
+   - Link back to mcstyle.notceleste.xyz
+   - SpigotMC has high domain authority for Minecraft searches
+
+5. CONTENT / LANDING PAGE IDEAS (optional, for more traffic)
+   - A "How to use LuckPerms color codes" guide page
+   - A "Minecraft MOTD color code reference" page
+   - A "Minecraft chat formatting guide" page
+   - Each page targets different search queries and funnels to your tool
+
+6. PAGE SPEED
+   - Your site is already a Vite SPA so it should be fast
+   - Run https://pagespeed.web.dev/ to check and fix any issues
+   - Google uses page speed as a ranking factor
+
+7. SOCIAL SHARING
+   - Share on Discord servers related to MC server administration
+   - The OG tags will make the preview look good when shared
+
+
+TARGET KEYWORDS (what people search for)
+-----------------------------------------
+High volume:
+  - "minecraft color codes"
+  - "minecraft motd generator"
+  - "minecraft text generator"
+  - "minecraft formatting codes"
+
+Medium volume:
+  - "minecraft gradient text"
+  - "minecraft styled chat"
+  - "luckperms prefix colors"
+  - "minecraft hex color codes"
+  - "minecraft server motd maker"
+
+Lower volume but very targeted:
+  - "luckperms gradient prefix"
+  - "tab plugin color codes"
+  - "minecraft username styler"
+  - "minecraft prefix generator"
+  - "styled chat plugin colors"
+
+
+HOW LONG UNTIL YOU SEE RESULTS
+-------------------------------
+- Google can take 1-4 weeks to index new/updated pages
+- Ranking improvements typically take 1-3 months
+- Backlinks speed this up significantly
+- Submitting to Google Search Console speeds up initial indexing

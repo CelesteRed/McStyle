@@ -178,6 +178,18 @@
 }
 
 /* ── Preview ── */
+.book-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.book-raw-toggle {
+  font-size: 10px;
+  padding: 2px 8px;
+}
+
 .book-preview-outer {
   display: flex;
   justify-content: center;
@@ -236,14 +248,14 @@
   overflow: hidden;
 }
 
-.book-preview-line {
+.book-preview-text {
   font-family: 'Minecraft', monospace;
   font-size: 8px;
   line-height: 20px;
   color: #1a0a00;
-  word-break: break-all;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   white-space: pre-wrap;
-  min-height: 20px;
 }
 
 .book-preview-empty {
@@ -272,6 +284,20 @@
   0%   { opacity: 1; }
   50%  { opacity: 0.4; }
   100% { opacity: 1; }
+}
+
+/* ── Version selector ── */
+.book-version-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.book-version-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 /* ── Export ── */
@@ -349,3 +375,4 @@
   background: var(--border);
   border-radius: 2px;
 }
+

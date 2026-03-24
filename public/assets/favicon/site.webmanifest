@@ -1,0 +1,13 @@
+{
+  "name": "MCStyle - Minecraft Username Styler",
+  "short_name": "MCStyle",
+  "description": "Free Minecraft text styling tool for usernames, MOTD, styled chat, gradients, and color codes with live preview.",
+  "icons": [
+    {"src": "/assets/favicon/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/assets/favicon/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png"}
+  ],
+  "theme_color": "#1a1125",
+  "background_color": "#1a1125",
+  "display": "standalone",
+  "start_url": "/"
+}

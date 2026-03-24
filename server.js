@@ -27,6 +27,7 @@ const BANNED_FILE = join(DATA_DIR, 'banned_ips.json');
 const BANNED_DISCORD_FILE = join(DATA_DIR, 'banned_discord.json');
 const USERS_FILE = join(DATA_DIR, 'users.json');
 const SESSIONS_FILE = join(DATA_DIR, 'sessions.json');
+const SHARES_FILE = join(DATA_DIR, 'shares.json');
 
 if (!existsSync(DATA_DIR)) {
   mkdirSync(DATA_DIR, { recursive: true });
@@ -48,11 +49,13 @@ let styles = loadJSON(DATA_FILE, []);
 let bannedIPs = loadJSON(BANNED_FILE, []);
 let bannedDiscords = loadJSON(BANNED_DISCORD_FILE, []);
 let users = loadJSON(USERS_FILE, {});
+let shares = loadJSON(SHARES_FILE, {});
 
 function persistStyles() { saveJSON(DATA_FILE, styles); }
 function persistBannedIPs() { saveJSON(BANNED_FILE, bannedIPs); }
 function persistBannedDiscords() { saveJSON(BANNED_DISCORD_FILE, bannedDiscords); }
 function persistUsers() { saveJSON(USERS_FILE, users); }
+function persistShares() { saveJSON(SHARES_FILE, shares); }
 
 // --- Persistent sessions (survive restarts) ---
 
@@ -707,9 +710,95 @@ app.post('/api/styles/:id/react', (req, res) => {
   res.json({ reactions: publicReactions });
 });
 
-// SPA fallback
+// --- Share Routes ---
+
+// Create a share link (supports single tab or multiple tabs)
+app.post('/api/share', (req, res) => {
+  const session = getSession(req);
+  if (!session) return res.status(401).json({ error: 'Login required.' });
+
+  let shareTabs;
+  if (req.body.tabs && Array.isArray(req.body.tabs)) {
+    // Multi-tab share
+    shareTabs = req.body.tabs
+      .filter(t => t.rawText && typeof t.rawText === 'string' && t.rawText.trim())
+      .slice(0, 100)
+      .map(t => ({
+        name: (t.name || 'Untitled').slice(0, 60),
+        rawText: t.rawText.trim().slice(0, 500),
+      }));
+  } else if (req.body.rawText && typeof req.body.rawText === 'string') {
+    // Single tab share (backwards compat)
+    shareTabs = [{
+      name: (req.body.name || 'Untitled').slice(0, 60),
+      rawText: req.body.rawText.trim().slice(0, 500),
+    }];
+  }
+
+  if (!shareTabs || shareTabs.length === 0) {
+    return res.status(400).json({ error: 'At least one tab with rawText is required.' });
+  }
+
+  const id = randomBytes(6).toString('hex');
+  shares[id] = {
+    tabs: shareTabs,
+    discordName: session.globalName || session.username,
+    discordAvatar: session.avatar,
+    createdAt: new Date().toISOString(),
+  };
+  persistShares();
+  res.json({ id, url: `/share/${id}` });
+});
+
+// Get share data
+app.get('/api/share/:id', (req, res) => {
+  const share = shares[req.params.id];
+  if (!share) return res.status(404).json({ error: 'Share not found.' });
+  res.json(share);
+});
+
+// Strip MC formatting codes for plain text embed
+function stripMCFormatting(text) {
+  return text
+    .replace(/<#[0-9A-Fa-f]{6}>/g, '')
+    .replace(/<\/#[0-9A-Fa-f]{6}>/g, '')
+    .replace(/[&§][0-9a-fk-or]/gi, '');
+}
+
+// SPA fallback with OG meta injection for share links
+const indexHtml = readFileSync(join(__dirname, 'dist', 'index.html'), 'utf-8');
+
+app.get('/share/:id', (req, res) => {
+  const share = shares[req.params.id];
+  if (!share) {
+    return res.send(indexHtml);
+  }
+  // Support both old format (share.rawText) and new format (share.tabs[])
+  const tabsList = share.tabs || [{ name: share.name, rawText: share.rawText }];
+  const firstName = tabsList[0]?.name || 'Untitled';
+  const firstRaw = tabsList[0]?.rawText || '';
+  const plainText = stripMCFormatting(firstRaw + 'Steve');
+  const title = tabsList.length > 1
+    ? `MCStyle - ${firstName} and ${tabsList.length - 1} more`
+    : `MCStyle - ${firstName}`;
+  const description = `${plainText} — shared by ${share.discordName || 'Anonymous'}`;
+  const url = `${DISCORD_REDIRECT_URI}/share/${req.params.id}`;
+
+  // Inject OG meta tags by replacing the defaults in the HTML
+  const injected = indexHtml
+    .replace(/<meta property="og:title" content="[^"]*"/, `<meta property="og:title" content="${escapeHtml(title)}"`)
+    .replace(/<meta property="og:description" content="[^"]*"/, `<meta property="og:description" content="${escapeHtml(description)}"`)
+    .replace(/<meta property="og:url" content="[^"]*"/, `<meta property="og:url" content="${escapeHtml(url)}"`);
+
+  res.send(injected);
+});
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 app.get('/{*path}', (req, res) => {
-  res.sendFile(join(__dirname, 'dist', 'index.html'));
+  res.send(indexHtml);
 });
 
 server.listen(PORT, '0.0.0.0', () => {

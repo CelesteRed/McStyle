@@ -144,6 +144,7 @@ function App() {
   const [utilsOpen, setUtilsOpen] = useState(true);
   const [utilsOrder, setUtilsOrder] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [shareLink, setShareLink] = useState(null);
   const [theme, setTheme] = useState(() => localStorage.getItem('mcstyle_theme') || 'default');
   const [openMenu, setOpenMenu] = useState(null);
   const [onlineCount, setOnlineCount] = useState(0);
@@ -152,6 +153,9 @@ function App() {
   const [showProfileClear, setShowProfileClear] = useState(false);
   const [profileClearText, setProfileClearText] = useState('');
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareSelectedIds, setShareSelectedIds] = useState(new Set());
+  const [shareModalStatus, setShareModalStatus] = useState(null);
   const profileMenuRef = useRef(null);
   const wsRef = useRef(null);
   const wsHandlersRef = useRef(new Set());
@@ -331,6 +335,27 @@ function App() {
     }
   }, []);
 
+  // Load shared tab(s) from /share/:id URL
+  useEffect(() => {
+    const match = window.location.pathname.match(/^\/share\/([a-f0-9]+)$/);
+    if (!match) return;
+    fetch(`/api/share/${match[1]}`).then(res => {
+      if (!res.ok) return null;
+      return res.json();
+    }).then(data => {
+      if (!data) return;
+      // Support both old format (data.rawText) and new format (data.tabs[])
+      const tabsList = data.tabs || [{ name: data.name, rawText: data.rawText }];
+      const newTabs = tabsList
+        .filter(t => t.rawText)
+        .map(t => createTab(t.name || 'Shared Style', t.rawText));
+      if (newTabs.length === 0) return;
+      setTabs(prev => [...prev, ...newTabs]);
+      setActiveTabId(newTabs[0].id);
+    }).catch(() => {});
+    window.history.replaceState({}, '', '/');
+  }, []);
+
   const tab = tabs.find(t => t.id === activeTabId) || tabs[0];
 
   // Auto-save tabs to localStorage on every change
@@ -500,6 +525,64 @@ function App() {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     }).catch(() => {});
+  };
+
+  const shareTab = async () => {
+    if (!discordUser) {
+      setShowLoginModal(true);
+      return;
+    }
+    try {
+      const res = await fetch('/api/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tabs: [{ name: tab.name, rawText: currentFormatString }] }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        const fullUrl = `${window.location.origin}${data.url}`;
+        await navigator.clipboard.writeText(fullUrl);
+        setShareLink(fullUrl);
+        setTimeout(() => setShareLink(null), 3000);
+      }
+    } catch { /* */ }
+  };
+
+  const openShareModal = () => {
+    if (!discordUser) {
+      setShowLoginModal(true);
+      return;
+    }
+    setShareSelectedIds(new Set([activeTabId]));
+    setShareModalStatus(null);
+    setShowShareModal(true);
+  };
+
+  const shareSelectedTabs = async () => {
+    const selected = tabs.filter(t => shareSelectedIds.has(t.id));
+    if (selected.length === 0) return;
+    setShareModalStatus('sharing');
+    try {
+      const res = await fetch('/api/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tabs: selected.map(t => ({ name: t.name, rawText: t.rawText })),
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        const fullUrl = `${window.location.origin}${data.url}`;
+        await navigator.clipboard.writeText(fullUrl);
+        setShareModalStatus('copied');
+        setTimeout(() => {
+          setShowShareModal(false);
+          setShareModalStatus(null);
+        }, 1500);
+      }
+    } catch {
+      setShareModalStatus(null);
+    }
   };
 
   const insertAtCursor = (text) => {
@@ -679,6 +762,20 @@ function App() {
           setShowNamePrompt(true);
           setOpenMenu(null);
         }}>Save As</div>
+        <div className="menubar-item" onClick={() => toggleMenu('share')}>
+          Share
+          {openMenu === 'share' && (
+            <div className="menubar-dropdown">
+              <div className="menubar-dropdown-item" onClick={() => { shareTab(); setOpenMenu(null); }}>
+                Quick Share<span className="menubar-shortcut">Current Tab</span>
+              </div>
+              <div className="menubar-separator" />
+              <div className="menubar-dropdown-item" onClick={() => { openShareModal(); setOpenMenu(null); }}>
+                Share Tabs...
+              </div>
+            </div>
+          )}
+        </div>
         <div className="menubar-separator-v" />
         <div className="menubar-item" onClick={() => { importFile(); setOpenMenu(null); }}>Import</div>
         <div className="menubar-item" onClick={() => { exportTab(); setOpenMenu(null); }}>Export</div>
@@ -787,7 +884,7 @@ function App() {
             )}
           </>
         )}
-        <span className="menubar-version">v1.1.3</span>
+        <span className="menubar-version">v1.1.6</span>
       </div>
     </div>
 
@@ -1004,9 +1101,14 @@ function App() {
             <div className="output-section">
               <div className="section-header">
                 Output
-                <button className="copy-btn" onClick={copyToClipboard}>
-                  {copied ? 'Copied!' : 'Copy'}
-                </button>
+                <div className="output-actions">
+                  <button className="copy-btn" onClick={copyToClipboard}>
+                    {copied ? 'Copied!' : 'Copy'}
+                  </button>
+                  <button className="share-btn" onClick={shareTab}>
+                    {shareLink ? 'Link Copied!' : 'Share'}
+                  </button>
+                </div>
               </div>
               <div className="output-box">
                 <code>{currentFormatString}</code>
@@ -1171,6 +1273,58 @@ function App() {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share modal */}
+      {showShareModal && (
+        <div className="save-prompt-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowShareModal(false); }}>
+          <div className="share-modal">
+            <button className="login-modal-close" onClick={() => setShowShareModal(false)}>&times;</button>
+            <h3 className="share-modal-title">Share Tabs</h3>
+            <div className="share-modal-controls">
+              <button
+                className="share-modal-select-all"
+                onClick={() => {
+                  if (shareSelectedIds.size === tabs.length) {
+                    setShareSelectedIds(new Set());
+                  } else {
+                    setShareSelectedIds(new Set(tabs.map(t => t.id)));
+                  }
+                }}
+              >
+                {shareSelectedIds.size === tabs.length ? 'Deselect All' : 'Select All'}
+              </button>
+              <span className="share-modal-count">{shareSelectedIds.size} selected</span>
+            </div>
+            <div className="share-modal-tabs">
+              {tabs.map(t => (
+                <label key={t.id} className={`share-modal-tab-item ${shareSelectedIds.has(t.id) ? 'selected' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={shareSelectedIds.has(t.id)}
+                    onChange={() => {
+                      setShareSelectedIds(prev => {
+                        const next = new Set(prev);
+                        if (next.has(t.id)) next.delete(t.id);
+                        else next.add(t.id);
+                        return next;
+                      });
+                    }}
+                  />
+                  <span className="share-modal-tab-name">{t.name}</span>
+                  {t.id === activeTabId && <span className="share-modal-tab-current">current</span>}
+                </label>
+              ))}
+            </div>
+            <button
+              className="share-modal-submit"
+              disabled={shareSelectedIds.size === 0 || shareModalStatus === 'sharing'}
+              onClick={shareSelectedTabs}
+            >
+              {shareModalStatus === 'copied' ? 'Link Copied!' : shareModalStatus === 'sharing' ? 'Sharing...' : `Share ${shareSelectedIds.size} Tab${shareSelectedIds.size !== 1 ? 's' : ''}`}
+            </button>
           </div>
         </div>
       )}
